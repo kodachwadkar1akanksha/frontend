@@ -243,7 +243,7 @@ const OTPVerification = () => {
           </CardContent>
         </Card>
         
-        <DemoCredentials />
+        {/* <DemoCredentials /> */}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import  Input  from '../components/ui/Input';
+import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
 import { 
   Upload, 
@@ -14,14 +14,21 @@ import {
   Camera,
   AlertTriangle,
   CheckCircle,
-  Download,
-  Filter
+  Download
 } from 'lucide-react';
 
 const ForensicAnalysis = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [uploadedFiles, setUploadedFiles] = useState([]);
+
+  // ✅ Fetch real backend forensic data (optional for now, can use mockFiles)
+  // useEffect(() => {
+  //   fetch("http://localhost:8000/forensic-data")
+  //     .then(res => res.json())
+  //     .then(data => setUploadedFiles(data))
+  //     .catch(err => console.error(err));
+  // }, []);
 
   const mockFiles = [
     {
@@ -40,60 +47,6 @@ const ForensicAnalysis = () => {
         iso: '100',
         exposure: '1/60s',
         aperture: 'f/1.5'
-      }
-    },
-    {
-      id: 2,
-      name: 'cctv_footage_entrance.mp4',
-      type: 'video',
-      size: '45.2 MB',
-      sha256: 'b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567',
-      device: 'Hikvision DS-2CD2143G0-I',
-      gps: '15.4910° N, 73.8279° E',
-      timestamp: '2024-01-15 14:25:10',
-      tampered: true,
-      metadata: {
-        camera: 'Hikvision DS-2CD2143G0-I',
-        resolution: '1920x1080',
-        fps: '25',
-        codec: 'H.264',
-        duration: '00:02:15'
-      }
-    },
-    {
-      id: 3,
-      name: 'witness_photo_002.png',
-      type: 'image',
-      size: '3.1 MB',
-      sha256: 'c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
-      device: 'Samsung Galaxy S21',
-      gps: '15.4908° N, 73.8277° E',
-      timestamp: '2024-01-15 14:35:42',
-      tampered: false,
-      metadata: {
-        camera: 'Samsung Galaxy S21',
-        lens: '26mm f/1.8',
-        iso: '200',
-        exposure: '1/30s',
-        aperture: 'f/1.8'
-      }
-    },
-    {
-      id: 4,
-      name: 'security_cam_03.avi',
-      type: 'video',
-      size: '78.5 MB',
-      sha256: 'd4e5f6789012345678901234567890abcdef1234567890abcdef123456789',
-      device: 'Dahua IPC-HFW4431R-Z',
-      gps: '15.4911° N, 73.8280° E',
-      timestamp: '2024-01-15 14:20:15',
-      tampered: false,
-      metadata: {
-        camera: 'Dahua IPC-HFW4431R-Z',
-        resolution: '1920x1080',
-        fps: '30',
-        codec: 'H.264',
-        duration: '00:03:45'
       }
     }
   ];
@@ -137,6 +90,32 @@ const ForensicAnalysis = () => {
         <span>Authentic</span>
       </Badge>
     );
+  };
+
+  // ✅ Generate Report - Calls FastAPI backend
+  const handleGenerateReport = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/generate-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files: filteredFiles }),
+      });
+
+      if (!response.ok) throw new Error("Failed to generate report");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "forensic_report.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -189,7 +168,6 @@ const ForensicAnalysis = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
             </div>
             <div className="flex space-x-2">
               <Button
@@ -243,12 +221,10 @@ const ForensicAnalysis = () => {
                   <Smartphone className="w-4 h-4 text-slate-400" />
                   <span className="text-slate-300">{file.device}</span>
                 </div>
-                
                 <div className="flex items-center space-x-2 text-sm">
                   <MapPin className="w-4 h-4 text-slate-400" />
                   <span className="text-slate-300">{file.gps}</span>
                 </div>
-                
                 <div className="flex items-center space-x-2 text-sm">
                   <Clock className="w-4 h-4 text-slate-400" />
                   <span className="text-slate-300">{file.timestamp}</span>
@@ -256,9 +232,7 @@ const ForensicAnalysis = () => {
 
                 <div className="pt-3 border-t border-slate-700">
                   <p className="text-xs text-slate-400 mb-2">SHA256 Hash:</p>
-                  <p className="font-mono text-xs text-slate-300 break-all">
-                    {file.sha256}
-                  </p>
+                  <p className="font-mono text-xs text-slate-300 break-all">{file.sha256}</p>
                 </div>
 
                 {Object.keys(file.metadata).length > 0 && (
@@ -274,29 +248,19 @@ const ForensicAnalysis = () => {
                     </div>
                   </div>
                 )}
-
-                <div className="flex space-x-2 pt-3">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Camera className="w-4 h-4" />
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Summary Stats */}
+      {/* Summary Stats + Generate Report */}
       <Card>
         <CardHeader>
           <CardTitle>Analysis Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-white">{filteredFiles.length}</div>
               <div className="text-sm text-slate-400">Total Files</div>
@@ -320,6 +284,12 @@ const ForensicAnalysis = () => {
               <div className="text-sm text-slate-400">Videos</div>
             </div>
           </div>
+
+          {/* ✅ Report Button */}
+          <Button variant="primary" size="sm" onClick={handleGenerateReport}>
+            <Download className="w-4 h-4 mr-2" />
+            Generate Report
+          </Button>
         </CardContent>
       </Card>
     </div>

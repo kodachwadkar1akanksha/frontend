@@ -27,7 +27,7 @@ const AITools = () => {
       description: 'Detect and analyze faces in video footage and images',
       icon: Camera,
       color: 'bg-blue-600',
-      supportedFormats: ['MP4', 'AVI', 'MOV', 'JPG', 'PNG']
+      supportedFormats: ['MP4', 'JPG', 'PNG']
     },
     {
       id: 'number-plate',
@@ -35,7 +35,7 @@ const AITools = () => {
       description: 'Extract and analyze vehicle number plates from traffic cameras',
       icon: Video,
       color: 'bg-green-600',
-      supportedFormats: ['MP4', 'AVI', 'MOV', 'JPG', 'PNG']
+      supportedFormats: ['MP4', 'JPG', 'PNG']
     }
   ];
 
