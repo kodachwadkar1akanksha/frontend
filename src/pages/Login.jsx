@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import  Input  from '../components/ui/Input';
-import  {Shield}  from 'lucide-react';
+import  {Shield, ArrowLeft}  from 'lucide-react';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -42,6 +42,14 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-police-dark flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        {/* Back to Landing */}
+        <div className="mb-6">
+          <Link to="/" className="inline-flex items-center text-police-blue hover:text-blue-400 transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Link>
+        </div>
+
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-police-blue rounded-full mb-4">
@@ -91,6 +99,12 @@ const Login = () => {
         
         <div className="text-center mt-6 text-sm text-slate-400">
           <p>Secure • Confidential • Authorized Access Only</p>
+          <p className="mt-2">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-police-blue hover:text-blue-400 transition-colors">
+              Register here
+            </Link>
+          </p>
         </div>
       </div>
     </div>

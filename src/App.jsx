@@ -1,10 +1,13 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AITools from "./pages/AITools";
 import ForensicAnalysis from "./pages/ForensicAnalysis";
+import UploadCriminalData from "./pages/UploadCriminalData";
 import Reports from "./pages/Reports";
 
 // ✅ Helper component for protecting routes
@@ -20,8 +23,12 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          {/* Public Login */}
-          <Route path="/" element={<Login />} />
+          {/* Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* Public Auth Pages */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Protected Pages */}
           <Route
@@ -50,6 +57,16 @@ function App() {
               // <ProtectedRoute>
                 <Layout>
                   <ForensicAnalysis />
+                </Layout>
+              // </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/upload"
+            element={
+              // <ProtectedRoute>
+                <Layout>
+                  <UploadCriminalData />
                 </Layout>
               // </ProtectedRoute>
             }
