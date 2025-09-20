@@ -6,7 +6,6 @@ import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import OTPVerification from "./pages/OTPVerification";
-import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AITools from "./pages/AITools";
 import ForensicAnalysis from "./pages/ForensicAnalysis";
@@ -27,19 +26,13 @@ function App() {
       <Router>
         <div className="App">
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Login />} />
+            {/* Landing Page */}
+            <Route path="/" element={<LandingPage />} />
+            
+            {/* Public Auth Pages */}
+            <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/otp-verification" element={<OTPVerification />} />
-    <Router>
-      <div className="App">
-        <Routes>
-          {/* Landing Page */}
-          <Route path="/" element={<LandingPage />} />
-          
-          {/* Public Auth Pages */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
 
             {/* Protected Pages */}
             <Route
@@ -49,7 +42,7 @@ function App() {
                   <Layout>
                     <Dashboard />
                   </Layout>
-                </ProtectedRoute>
+                 </ProtectedRoute>
               }
             />
             <Route
@@ -59,7 +52,7 @@ function App() {
                   <Layout>
                     <AITools />
                   </Layout>
-                </ProtectedRoute>
+                 </ProtectedRoute>
               }
             />
             <Route
@@ -69,7 +62,17 @@ function App() {
                   <Layout>
                     <ForensicAnalysis />
                   </Layout>
-                </ProtectedRoute>
+                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/upload-criminal-data"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <UploadCriminalData />
+                  </Layout>
+                 </ProtectedRoute>
               }
             />
             <Route
@@ -79,60 +82,9 @@ function App() {
                   <Layout>
                     <Reports />
                   </Layout>
-                </ProtectedRoute>
+                 </ProtectedRoute>
               }
             />
-          {/* Protected Pages */}
-          <Route
-            path="/dashboard"
-            element={
-              // <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              // </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/ai-tools"
-            element={
-              // <ProtectedRoute>
-                <Layout>
-                  <AITools />
-                </Layout>
-              // </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/forensic"
-            element={
-              // <ProtectedRoute>
-                <Layout>
-                  <ForensicAnalysis />
-                </Layout>
-              // </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/upload"
-            element={
-              // <ProtectedRoute>
-                <Layout>
-                  <UploadCriminalData />
-                </Layout>
-              // </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              // <ProtectedRoute>
-                <Layout>
-                  <Reports />
-                </Layout>
-              // </ProtectedRoute>
-            }
-          />
 
             {/* Catch-all → redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />

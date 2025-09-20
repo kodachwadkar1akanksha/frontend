@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import DemoCredentials from '../components/DemoCredentials';
-import { Shield, UserPlus, LogIn } from 'lucide-react';
+import { Shield, UserPlus, LogIn, ArrowLeft } from 'lucide-react';
 
 const Login = () => {
   const [formData, setFormData] = useState({

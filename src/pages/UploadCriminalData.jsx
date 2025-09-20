@@ -155,7 +155,7 @@ const UploadCriminalData = () => {
                 <label className="block text-sm font-medium text-slate-200">
                   Criminal Face Image
                 </label>
-                <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-police-blue transition-colors">
+                <div className="relative border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-police-blue transition-colors">
                   {faceData.preview ? (
                     <div className="relative">
                       <img 
@@ -252,7 +252,7 @@ const UploadCriminalData = () => {
                 <label className="block text-sm font-medium text-slate-200">
                   Number Plate Image
                 </label>
-                <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-police-blue transition-colors">
+                <div className="relative border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-police-blue transition-colors">
                   {plateData.preview ? (
                     <div className="relative">
                       <img 
