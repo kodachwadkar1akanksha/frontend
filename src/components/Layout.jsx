@@ -5,6 +5,7 @@ import {
   Video, 
   FileCheck, 
   FileText, 
+  Upload,
   LogOut, 
   Menu,
   X,
@@ -23,6 +24,7 @@ const Layout = ({ children }) => {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'CCTV Analysis', href: '/ai-tools', icon: Video },
     { name: 'Forensic Media Analysis', href: '/forensic', icon: FileCheck },
+    { name: 'Upload Criminal Data', href: '/upload-criminal-data', icon: Upload },
     { name: 'Reports', href: '/reports', icon: FileText },
   ];
 
