@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth,AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -12,10 +12,11 @@ import Reports from "./pages/Reports";
 
 // ✅ Helper component for protecting routes
 const ProtectedRoute = ({ children }) => {
-  const caseData = localStorage.getItem("caseData");
-  const isAuthenticated = caseData !== null;
+  const { user, loading } = useAuth();
 
-  return isAuthenticated ? children : <Navigate to="/" replace />;
+  if (loading) return <div className="text-white text-center">Loading...</div>;
+
+  return user ? children : <Navigate to="/" replace />;
 };
 
 function App() {

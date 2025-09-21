@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { AuthProvider,useAuth } from '../contexts/AuthContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import           Button  from '../components/ui/Button';
+import Button from '../components/ui/Button';
 import { 
   Video, 
   FileCheck, 
@@ -13,8 +14,8 @@ import {
 } from 'lucide-react';
 
 const Dashboard = () => {
-  const caseData = JSON.parse(localStorage.getItem('caseData') || '{}');
-  
+  const { user } = useAuth();
+
   const stats = [
     { name: 'Total Evidence Files', value: '24', icon: FileCheck, change: '+12%', changeType: 'positive' },
     { name: 'CCTV Analysis', value: '8', icon: Video, change: '+3', changeType: 'positive' },
@@ -33,8 +34,12 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-police-navy to-police-blue rounded-lg p-6 text-white">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, {caseData.investigatorName}</h1>
-        <p className="text-blue-100">Case ID: {caseData.caseId} • Last updated: {new Date().toLocaleString()}</p>
+        <h1 className="text-3xl font-bold mb-2">
+          Welcome back, {user?.name || user?.username || 'Investigator'}
+        </h1>
+        <p className="text-blue-100">
+          Email: {user?.email || 'N/A'} • Last updated: {new Date().toLocaleString()}
+        </p>
       </div>
 
       {/* Stats Grid */}
@@ -49,9 +54,11 @@ const Dashboard = () => {
                 <div className="ml-4 flex-1">
                   <p className="text-sm font-medium text-slate-400">{stat.name}</p>
                   <p className="text-2xl font-bold text-white">{stat.value}</p>
-                  <p className={`text-sm ${
-                    stat.changeType === 'positive' ? 'text-green-400' : 'text-red-400'
-                  }`}>
+                  <p
+                    className={`text-sm ${
+                      stat.changeType === 'positive' ? 'text-green-400' : 'text-red-400'
+                    }`}
+                  >
                     {stat.change} from last week
                   </p>
                 </div>

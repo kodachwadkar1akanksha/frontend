@@ -1,85 +1,119 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
-import Badge from '../components/ui/Badge';
-import { 
-  Upload, 
-  Search, 
-  FileImage, 
-  FileVideo, 
-  MapPin, 
-  Clock, 
-  Smartphone, 
-  Camera,
+import React, { useState, useEffect } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Badge from "../components/ui/Badge";
+import {
+  Upload,
+  FileImage,
+  FileVideo,
+  MapPin,
+  Clock,
+  Smartphone,
   AlertTriangle,
   CheckCircle,
-  Download
-} from 'lucide-react';
+  Download,
+} from "lucide-react";
+import Cookies from "js-cookie";
 
 const ForensicAnalysis = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null); // ✅ single file only
 
-  // ✅ Fetch real backend forensic data (optional for now, can use mockFiles)
+
+
+  // ✅ Fetch files stored in backend/DB
   // useEffect(() => {
-  //   fetch("http://localhost:8000/forensic-data")
-  //     .then(res => res.json())
-  //     .then(data => setUploadedFiles(data))
-  //     .catch(err => console.error(err));
+  //   const fetchFiles = async () => {
+  //     try {
+  //       const token = localStorage.getItem("access_token");
+  //       if (!token) throw new Error("No access token found");
+
+  //       const res = await fetch("http://localhost:8000/api/user/forensic-data", {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //         credentials: "include",
+  //       });
+  //       if (!res.ok) throw new Error("Failed to fetch forensic data");
+  //       const data = await res.json();
+  //       setUploadedFiles(data);
+  //     } catch (err) {
+  //       console.error("Fetch error:", err);
+  //     }
+  //   };
+
+  //   fetchFiles();
   // }, []);
 
-  const mockFiles = [
-    {
-      id: 1,
-      name: 'evidence_photo_001.jpg',
-      type: 'image',
-      size: '2.4 MB',
-      sha256: 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
-      device: 'iPhone 13 Pro',
-      gps: '15.4909° N, 73.8278° E',
-      timestamp: '2024-01-15 14:30:25',
-      tampered: false,
-      metadata: {
-        camera: 'iPhone 13 Pro',
-        lens: '26mm f/1.5',
-        iso: '100',
-        exposure: '1/60s',
-        aperture: 'f/1.5'
-      }
-    }
-  ];
-
-  const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const newFiles = files.map((file, index) => ({
-      id: uploadedFiles.length + index + 1,
-      name: file.name,
-      type: file.type.startsWith('image/') ? 'image' : 'video',
-      size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-      sha256: 'Processing...',
-      device: 'Unknown',
-      gps: 'Not available',
-      timestamp: new Date().toLocaleString(),
-      tampered: false,
-      metadata: {}
-    }));
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+  // ✅ Select a single file
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    setSelectedFile(file || null);
   };
 
-  const filteredFiles = [...mockFiles, ...uploadedFiles].filter(file => {
-    const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === 'all' || file.type === filterType;
+  // ✅ Upload selected file
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("camera_id", "frontend_upload");
+
+    const endpoint = "http://localhost:8000/api/user/upload/server";
+
+    try {
+      const token = localStorage.getItem("access_token");
+      console.log(token);
+      if (!token) throw new Error("No access token found");
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        body: formData,
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+
+      const newFile = {
+        id: data.image?.id || data.video?.id || Date.now(),
+        name: selectedFile.name,
+        type: selectedFile.type.startsWith("image/") ? "image" : "video",
+        size: (selectedFile.size / (1024 * 1024)).toFixed(1) + " MB",
+        sha256: data.image?.sha256 || data.video?.sha256,
+        device: "Unknown",
+        gps: "Not available",
+        timestamp: new Date(
+          data.image?.ingest_time || data.video?.ingest_time || Date.now()
+        ).toLocaleString(),
+        tampered: false,
+        metadata: {},
+        url: data.secure_url,
+      };
+
+      setUploadedFiles((prev) => [...prev, newFile]);
+      setSelectedFile(null); // ✅ reset
+    } catch (err) {
+      console.error("Upload error:", err);
+    }
+  };
+
+  // ✅ Filter logic
+  const filteredFiles = uploadedFiles.filter((file) => {
+    const matchesSearch = file.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesFilter = filterType === "all" || file.type === filterType;
     return matchesSearch && matchesFilter;
   });
 
-  const getFileIcon = (type) => {
-    return type === 'image' ? <FileImage className="w-5 h-5" /> : <FileVideo className="w-5 h-5" />;
-  };
+  const getFileIcon = (type) =>
+    type === "image" ? <FileImage className="w-5 h-5" /> : <FileVideo className="w-5 h-5" />;
 
-  const getTamperBadge = (tampered) => {
-    return tampered ? (
+  const getTamperBadge = (tampered) =>
+    tampered ? (
       <Badge variant="danger" className="flex items-center space-x-1">
         <AlertTriangle className="w-3 h-3" />
         <span>Tampered</span>
@@ -90,15 +124,18 @@ const ForensicAnalysis = () => {
         <span>Authentic</span>
       </Badge>
     );
-  };
 
-  // ✅ Generate Report - Calls FastAPI backend
+  // ✅ Generate PDF Report
   const handleGenerateReport = async () => {
     try {
-      const response = await fetch("http://localhost:8000/generate-report", {
+      const token = Cookies.get("access_token");
+      if (!token) throw new Error("No access token found");
+
+      const response = await fetch("http://localhost:8000/api/report/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ files: filteredFiles }),
+        // credentials: "include",
       });
 
       if (!response.ok) throw new Error("Failed to generate report");
@@ -121,36 +158,52 @@ const ForensicAnalysis = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Forensic Media Analysis</h1>
-        <p className="text-slate-400">Analyze metadata, detect tampering, and verify authenticity of media files</p>
+        <h1 className="text-3xl font-bold text-white mb-2">
+          Forensic Media Analysis
+        </h1>
+        <p className="text-slate-400">
+          Analyze metadata, detect tampering, and verify authenticity of media files
+        </p>
       </div>
 
       {/* Upload Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Upload Media Files</CardTitle>
+          <CardTitle>Select Media File</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center">
+          <div
+            className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center hover:border-police-blue transition-colors cursor-pointer"
+            onClick={() => document.getElementById("media-upload").click()}
+          >
             <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
             <div className="space-y-2">
-              <p className="text-lg font-medium text-white">Upload photos and videos for analysis</p>
-              <p className="text-slate-400">Supports JPG, PNG, MP4, AVI, MOV formats</p>
+              <p className="text-lg font-medium text-white">
+                Choose a photo or video for upload
+              </p>
+              <p className="text-slate-400">Supports JPG, PNG, MP4, AVI, MOV</p>
               <input
                 type="file"
                 accept="image/*,video/*"
-                multiple
-                onChange={handleFileUpload}
+                onChange={handleFileSelect}
                 className="hidden"
                 id="media-upload"
               />
-              <label htmlFor="media-upload">
-                <Button as="span" variant="outline">
-                  Choose Files
-                </Button>
-              </label>
             </div>
           </div>
+
+          {/* Show selected file */}
+          {selectedFile && (
+            <div className="mt-4">
+              <h3 className="text-white font-medium mb-2">File Selected:</h3>
+              <p className="text-slate-300 text-sm mb-3">
+                {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(1)} MB)
+              </p>
+              <Button variant="primary" onClick={handleUpload}>
+                Upload File
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -171,23 +224,23 @@ const ForensicAnalysis = () => {
             </div>
             <div className="flex space-x-2">
               <Button
-                variant={filterType === 'all' ? 'primary' : 'outline'}
-                onClick={() => setFilterType('all')}
+                variant={filterType === "all" ? "primary" : "outline"}
+                onClick={() => setFilterType("all")}
                 size="sm"
               >
                 All Files
               </Button>
               <Button
-                variant={filterType === 'image' ? 'primary' : 'outline'}
-                onClick={() => setFilterType('image')}
+                variant={filterType === "image" ? "primary" : "outline"}
+                onClick={() => setFilterType("image")}
                 size="sm"
               >
                 <FileImage className="w-4 h-4 mr-2" />
                 Images
               </Button>
               <Button
-                variant={filterType === 'video' ? 'primary' : 'outline'}
-                onClick={() => setFilterType('video')}
+                variant={filterType === "video" ? "primary" : "outline"}
+                onClick={() => setFilterType("video")}
                 size="sm"
               >
                 <FileVideo className="w-4 h-4 mr-2" />
@@ -209,13 +262,16 @@ const ForensicAnalysis = () => {
                     {getFileIcon(file.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-white truncate">{file.name}</h3>
+                    <h3 className="font-medium text-white truncate">
+                      {file.name}
+                    </h3>
                     <p className="text-sm text-slate-400">{file.size}</p>
                   </div>
                 </div>
                 {getTamperBadge(file.tampered)}
               </div>
 
+              {/* File Info */}
               <div className="space-y-3">
                 <div className="flex items-center space-x-2 text-sm">
                   <Smartphone className="w-4 h-4 text-slate-400" />
@@ -230,12 +286,16 @@ const ForensicAnalysis = () => {
                   <span className="text-slate-300">{file.timestamp}</span>
                 </div>
 
+                {/* SHA256 */}
                 <div className="pt-3 border-t border-slate-700">
                   <p className="text-xs text-slate-400 mb-2">SHA256 Hash:</p>
-                  <p className="font-mono text-xs text-slate-300 break-all">{file.sha256}</p>
+                  <p className="font-mono text-xs text-slate-300 break-all">
+                    {file.sha256}
+                  </p>
                 </div>
 
-                {Object.keys(file.metadata).length > 0 && (
+                {/* Metadata */}
+                {Object.keys(file.metadata || {}).length > 0 && (
                   <div className="pt-3 border-t border-slate-700">
                     <p className="text-xs text-slate-400 mb-2">Metadata:</p>
                     <div className="space-y-1">
@@ -248,13 +308,34 @@ const ForensicAnalysis = () => {
                     </div>
                   </div>
                 )}
+
+                {/* ✅ Preview Media */}
+                {file.url && (
+                  <div className="pt-3 border-t border-slate-700">
+                    {file.type === "image" ? (
+                      <img
+                        src={file.url}
+                        alt={file.name}
+                        className="rounded-lg max-h-48 object-cover"
+                      />
+                    ) : (
+                      <video
+                        controls
+                        className="rounded-lg max-h-48 w-full mt-2"
+                      >
+                        <source src={file.url} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Summary Stats + Generate Report */}
+      {/* Summary + Report */}
       <Card>
         <CardHeader>
           <CardTitle>Analysis Summary</CardTitle>
@@ -262,30 +343,32 @@ const ForensicAnalysis = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">{filteredFiles.length}</div>
+              <div className="text-2xl font-bold text-white">
+                {filteredFiles.length}
+              </div>
               <div className="text-sm text-slate-400">Total Files</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-400">
-                {filteredFiles.filter(f => !f.tampered).length}
+                {filteredFiles.filter((f) => !f.tampered).length}
               </div>
               <div className="text-sm text-slate-400">Authentic</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-400">
-                {filteredFiles.filter(f => f.tampered).length}
+                {filteredFiles.filter((f) => f.tampered).length}
               </div>
               <div className="text-sm text-slate-400">Tampered</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-police-blue">
-                {filteredFiles.filter(f => f.type === 'video').length}
+                {filteredFiles.filter((f) => f.type === "video").length}
               </div>
               <div className="text-sm text-slate-400">Videos</div>
             </div>
           </div>
 
-          {/* ✅ Report Button */}
+          {/* Generate Report */}
           <Button variant="primary" size="sm" onClick={handleGenerateReport}>
             <Download className="w-4 h-4 mr-2" />
             Generate Report

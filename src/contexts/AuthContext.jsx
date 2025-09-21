@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import apiFetch from '../api/api';
 
 const AuthContext = createContext();
 
@@ -15,34 +16,38 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on app start
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    // Try fetching current user from backend
+    apiFetch("/user/details", { method: "GET" })
+      .then((data) => {
+        setUser(data);
+        localStorage.setItem("user", JSON.stringify(data));
+      })
+      .catch(() => {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = (userData) => {
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('caseData');
-  };
-
-  const value = {
-    user,
-    login,
-    logout,
-    loading
+    localStorage.removeItem("user");
+    localStorage.removeItem("access_token");
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

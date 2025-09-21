@@ -1,27 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import DemoCredentials from '../components/DemoCredentials';
-import { Shield, UserPlus, LogIn } from 'lucide-react';
+import { Shield, LogIn } from 'lucide-react';
+import apiFetch from '../api/api';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({name:'', email: '', password: '', role: 'user' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user starts typing
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (error) setError('');
   };
 
@@ -29,26 +24,26 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock validation - in real app, this would be API call
-      if (formData.email === 'admin@goapolice.gov.in' && formData.password === 'admin123') {
-        // Save to localStorage
-        localStorage.setItem('caseData', JSON.stringify({
-          caseId: 'CASE-2024-001',
-          investigatorName: 'Admin User',
-          loginTime: new Date().toISOString()
-        }));
-        
-        navigate('/dashboard');
-      } else {
-        setError('Invalid email or password');
+      // Login request
+      formData.role = 'user';
+      const data = await apiFetch("/user/login", {
+        method: "POST",
+        body: JSON.stringify(formData),
+      });
+
+      if (data.token) {
+        localStorage.setItem("access_token", data.token);
       }
+
+      // Fetch user details with the token
+      const userData = await apiFetch("/user/details", { method: "GET" });
+      login(userData);
+
+      navigate("/dashboard");
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +76,7 @@ const Login = () => {
                   {error}
                 </div>
               )}
-              
+
               <Input
                 label="Email"
                 name="email"
@@ -91,7 +86,7 @@ const Login = () => {
                 onChange={handleInputChange}
                 required
               />
-              
+
               <Input
                 label="Password"
                 name="password"
@@ -101,16 +96,22 @@ const Login = () => {
                 onChange={handleInputChange}
                 required
               />
-              
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
+
+              <Input
+                label="Role"
+                name="role"
+                type="text"
+                placeholder="Enter your role (admin/user)"
+                value={formData.role}
+                onChange={handleInputChange}
+                hidden
+              />
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
-            
+
             <div className="mt-6 text-center">
               <p className="text-slate-400 text-sm">
                 Don't have an account?{' '}
@@ -124,9 +125,7 @@ const Login = () => {
             </div>
           </CardContent>
         </Card>
-        
-        {/* <DemoCredentials /> */}
-        
+
         <div className="text-center mt-6 text-sm text-slate-400">
           <p>Secure • Confidential • Authorized Access Only</p>
         </div>

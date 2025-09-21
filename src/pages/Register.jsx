@@ -5,6 +5,8 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { Shield, UserPlus, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
+const API_BASE = 'http://localhost:8000/api/user'; // ⚡ change if needed
+
 const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -24,7 +26,6 @@ const Register = () => {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
@@ -53,33 +54,44 @@ const Register = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    if (!validateForm()) {
-      return;
+  e.preventDefault();
+  setError('');
+  
+  if (!validateForm()) return;
+  
+  setIsLoading(true);
+  try {
+    const res = await fetch(`${API_BASE}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: 'user'
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || data.message || 'Registration failed');
     }
-    
-    setIsLoading(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Mock registration - in real app, this would be API call
-      // For demo, we'll just navigate to OTP page
-      navigate('/otp-verification', { 
-        state: { 
-          email: formData.email,
-          name: formData.name 
-        } 
-      });
-    } catch (err) {
-      setError('Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+    // ✅ Save requestId, email, and name for OTP step
+    localStorage.setItem('requestId', data.requestId);
+    localStorage.setItem('pendingEmail', formData.email);
+    localStorage.setItem('pendingName', formData.name);
+
+    // Redirect to OTP page
+    navigate('/otp-verification');
+  } catch (err) {
+    setError(err.message || 'Registration failed. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-police-dark flex items-center justify-center p-4">
@@ -140,7 +152,7 @@ const Register = () => {
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="flex h-10 w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 pr-10 text-sm text-slate-100 placeholder:text-slate-400 focus:border-police-blue focus:outline-none focus:ring-1 focus:ring-police-blue disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 pr-10 text-sm text-slate-100 placeholder:text-slate-400 focus:border-police-blue focus:outline-none focus:ring-1 focus:ring-police-blue"
                     required
                   />
                   <button
@@ -164,7 +176,7 @@ const Register = () => {
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="flex h-10 w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 pr-10 text-sm text-slate-100 placeholder:text-slate-400 focus:border-police-blue focus:outline-none focus:ring-1 focus:ring-police-blue disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 pr-10 text-sm text-slate-100 placeholder:text-slate-400 focus:border-police-blue focus:outline-none focus:ring-1 focus:ring-police-blue"
                     required
                   />
                   <button
@@ -177,11 +189,7 @@ const Register = () => {
                 </div>
               </div>
               
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Creating Account...' : 'Create Account'}
               </Button>
             </form>
